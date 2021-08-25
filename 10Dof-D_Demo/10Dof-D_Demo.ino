@@ -1,13 +1,24 @@
 #include<ros.h>
 #include <sensor_msgs/Imu.h> // need this for generating imu messages in ros
 #include <std_msgs/Float32.h>
-
+#include <tf/transform_broadcaster.h>
+#include <sensor_msgs/MagneticField.h>
 #include "Waveshare_10Dof-D.h"
 bool gbSenserConnectState = false;
+
+geometry_msgs::TransformStamped t;
+tf::TransformBroadcaster broadcaster;
+
 ros::NodeHandle nh;
 
 sensor_msgs::Imu imu_msg;
+sensor_msgs::MagneticField mag_msg;
+
 ros::Publisher imu_data("/imu_data", &imu_msg);
+ros::Publisher mag_data("/mag", &mag_msg);
+
+char frameid[] = "/base_link";
+char child[] = "/imu";
 
 void setup() {
   nh.getHardware()->setBaud(115200); // setting the baud rate for rosserial
@@ -18,6 +29,9 @@ void setup() {
   IMU_EN_SENSOR_TYPE enMotionSensorType, enPressureType;
   Serial.begin(115200);
   nh.advertise(imu_data);
+
+  broadcaster.init(nh);
+
 
 
   imuInit(&enMotionSensorType, &enPressureType);
@@ -63,22 +77,37 @@ void loop() {
   float qy = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
   float qz = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
   float qw = cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw;
+
+  t.header.frame_id = frameid;
+  t.child_frame_id = child;
+  t.transform.translation.x = 1.0;
+  t.transform.rotation.x = qx;
+  t.transform.rotation.y = qy;
+  t.transform.rotation.z = qz;
+  t.transform.rotation.w = qw;
+  t.header.stamp = nh.now();
+  broadcaster.sendTransform(t);
   //Serial.print(cosYaw);
-//  imu_msg.header.frame_id = "/imu";
-//  imu_msg.angular_velocity.x = stGyroRawData.s16X;
-//  imu_msg.angular_velocity.y = stGyroRawData.s16Y;
-//  imu_msg.angular_velocity.z = stGyroRawData.s16Z;
-//
-//  imu_msg.linear_acceleration.x =  stAccelRawData.s16X;
-//  imu_msg.linear_acceleration.y = stAccelRawData.s16Y;
-//  imu_msg.linear_acceleration.z = stAccelRawData.s16Z;
+  //  imu_msg.header.frame_id = "/imu";
+  //  imu_msg.angular_velocity.x = stGyroRawData.s16X;
+  //  imu_msg.angular_velocity.y = stGyroRawData.s16Y;
+  //  imu_msg.angular_velocity.z = stGyroRawData.s16Z;
+  //
+  //  imu_msg.linear_acceleration.x =  stAccelRawData.s16X;
+  //  imu_msg.linear_acceleration.y = stAccelRawData.s16Y;
+  //  imu_msg.linear_acceleration.z = stAccelRawData.s16Z;
 
-  imu_msg.orientation.x = qx;
-  imu_msg.orientation.y = qy;
-  imu_msg.orientation.z = qz;
-  imu_msg.orientation.w = qw;
+  
+    mag_msg.magnetic_field.x = stMagnRawData.s16X;
+    mag_msg.magnetic_field.y = stMagnRawData.s16Y;
+    mag_msg.magnetic_field.z = stMagnRawData.s16Z;
 
-  imu_data.publish(&imu_msg); // publishing the imu data
+//  imu_msg.orientation.x = qx/360;
+//  imu_msg.orientation.y = qy/360;
+//  imu_msg.orientation.z = qz/360;
+//  imu_msg.orientation.w = qw/360;
+
+  imu_data.publish(&mag_msg); // publishing the imu data
   nh.spinOnce();
 
 
