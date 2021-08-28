@@ -1,0 +1,8 @@
+prefix=/home/khaled/IMU/10_DOF_IMU_Sensor_D_Code (1)/Arduino/imu_ws/install
+
+Name: imu_test
+Description: Description of imu_test
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
