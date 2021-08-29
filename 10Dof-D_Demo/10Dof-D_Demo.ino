@@ -127,7 +127,7 @@ void loop() {
   //
   //
   quaternion_.setRPY( stAngles.fRoll * 3.14 / 180, stAngles.fPitch * 3.14 / 180, stAngles.fYaw * 3.14 / 180 );
-  quaternion_ = quaternion_.normalize();
+//  quaternion_ = quaternion_.normalize();
   imu_msg.orientation.x = quaternion_.x();
   imu_msg.orientation.y = quaternion_.y();
   imu_msg.orientation.z =  quaternion_.z();
